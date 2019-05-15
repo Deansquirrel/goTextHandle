@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Deansquirrel/goTextHandle/global"
+	"github.com/Deansquirrel/goTextHandle/repository"
 	"github.com/Deansquirrel/goToolCommon"
 	log "github.com/Deansquirrel/goToolLog"
 	"github.com/iris-contrib/middleware/cors"
@@ -21,7 +22,12 @@ import (
 )
 
 func Start() {
-	log.Debug("Test")
+	startWebService()
+	rep := repository.ProxyConfigDB{}
+	rep.Test()
+}
+
+func startWebService() {
 	app := iris.New()
 
 	app.Use(recover.New())
