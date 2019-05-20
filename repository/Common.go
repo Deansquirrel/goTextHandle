@@ -13,11 +13,11 @@ import (
 
 import log "github.com/Deansquirrel/goToolLog"
 
-type Common struct {
+type common struct {
 }
 
 //获取配置库连接配置
-func (c *Common) GetConfigDBConfig() *goToolMSSql.MSSqlConfig {
+func (c *common) GetConfigDBConfig() *goToolMSSql.MSSqlConfig {
 	return &goToolMSSql.MSSqlConfig{
 		Server: global.SysConfig.DB.Server,
 		Port:   global.SysConfig.DB.Port,
@@ -27,30 +27,40 @@ func (c *Common) GetConfigDBConfig() *goToolMSSql.MSSqlConfig {
 	}
 }
 
-func (c *Common) GetDBConfigFromStr(connStr string) (*goToolMSSql.MSSqlConfig, error) {
+func (c *common) GetDBConfigFromStr(connStr string) ([]*goToolMSSql.MSSqlConfig, error) {
 	strList := strings.Split(connStr, "|")
 	strList = goToolCommon.ClearBlock(strList)
-	if len(strList) != 5 {
+	if len(strList)%5 != 0 {
 		err := errors.New(fmt.Sprintf("config num error,exp 5,act %d", len(strList)))
 		return nil, err
 	}
-	port, err := strconv.Atoi(strList[1])
-	if err != nil {
-		err = errors.New(fmt.Sprintf("convert port to int error [%s],port str: %s", err.Error(), strList[1]))
-		return nil, err
+
+	rList := make([]*goToolMSSql.MSSqlConfig, 0)
+	configLength := int(len(strList) / 5)
+	for i := 0; i < configLength; i++ {
+		port, err := strconv.Atoi(strList[i*5+1])
+		if err != nil {
+			err = errors.New(fmt.Sprintf("convert port to int error [%s],port str: %s", err.Error(), strList[i*5+1]))
+			return nil, err
+		}
+		dbConfig := &goToolMSSql.MSSqlConfig{
+			Server: strList[i*5+0],
+			Port:   port,
+			User:   strList[i*5+2],
+			Pwd:    strList[i*5+3],
+			DbName: strList[i*5+4],
+		}
+		rList = append(rList, dbConfig)
 	}
-	dbConfig := &goToolMSSql.MSSqlConfig{
-		Server: strList[0],
-		Port:   port,
-		User:   strList[2],
-		Pwd:    strList[3],
-		DbName: strList[4],
+
+	for _, d := range rList {
+		log.Debug(fmt.Sprintf("%s %d %s %s %s", d.Server, d.Port, d.User, d.Pwd, d.DbName))
 	}
-	log.Debug(fmt.Sprintf("%s %d %s %s %s", dbConfig.Server, dbConfig.Port, dbConfig.User, dbConfig.Pwd, dbConfig.DbName))
-	return dbConfig, nil
+
+	return rList, nil
 }
 
-func (c *Common) GetRowsBySQL(dbConfig *goToolMSSql.MSSqlConfig, sql string, args ...interface{}) (*sql.Rows, error) {
+func (c *common) GetRowsBySQL(dbConfig *goToolMSSql.MSSqlConfig, sql string, args ...interface{}) (*sql.Rows, error) {
 	conn, err := goToolMSSql.GetConn(dbConfig)
 	if err != nil {
 		log.Error(err.Error())
@@ -73,7 +83,7 @@ func (c *Common) GetRowsBySQL(dbConfig *goToolMSSql.MSSqlConfig, sql string, arg
 	}
 }
 
-func (c *Common) SetRowsBySQL(dbConfig *goToolMSSql.MSSqlConfig, sql string, args ...interface{}) error {
+func (c *common) SetRowsBySQL(dbConfig *goToolMSSql.MSSqlConfig, sql string, args ...interface{}) error {
 	conn, err := goToolMSSql.GetConn(dbConfig)
 	if err != nil {
 		log.Error(err.Error())

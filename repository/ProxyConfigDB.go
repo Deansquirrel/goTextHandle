@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Deansquirrel/goToolMSSql"
 )
@@ -22,16 +23,16 @@ const (
 type ProxyConfigDB struct {
 }
 
-func (p *ProxyConfigDB) Test() {
-	list, err := p.GetAppIdAndDomain()
-	if err != nil {
-		log.Error(err.Error())
-	} else {
-		for k, v := range list {
-			log.Debug(fmt.Sprintf("%s %s", k, v))
-		}
-	}
-}
+//func (p *ProxyConfigDB) Test() {
+//	list, err := p.GetAppIdAndDomain()
+//	if err != nil {
+//		log.Error(err.Error())
+//	} else {
+//		for k, v := range list {
+//			log.Debug(fmt.Sprintf("%s %s", k, v))
+//		}
+//	}
+//}
 
 //返回appid和domain的对应关系 map
 func (p *ProxyConfigDB) GetAppIdAndDomain() (map[string]string, error) {
@@ -39,7 +40,7 @@ func (p *ProxyConfigDB) GetAppIdAndDomain() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	c := Common{}
+	c := common{}
 	rows, err := c.GetRowsBySQL(config, sqlGetAppIdAndDomain)
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func (p *ProxyConfigDB) GetAppIdAndDomain() (map[string]string, error) {
 }
 
 func (p *ProxyConfigDB) getConnConfig() (dbConfig *goToolMSSql.MSSqlConfig, err error) {
-	c := Common{}
+	c := common{}
 	config := c.GetConfigDBConfig()
 	rows, err := c.GetRowsBySQL(config, sqlGetConnInfo)
 	if err != nil {
@@ -91,6 +92,14 @@ func (p *ProxyConfigDB) getConnConfig() (dbConfig *goToolMSSql.MSSqlConfig, err 
 		return
 	}
 	log.Debug(connStr)
-	dbConfig, err = c.GetDBConfigFromStr(connStr)
+	dbConfigList, err := c.GetDBConfigFromStr(connStr)
+	if err != nil {
+		return
+	}
+	if len(dbConfigList) > 0 {
+		dbConfig = dbConfigList[0]
+	} else {
+		err = errors.New("config is null")
+	}
 	return
 }
