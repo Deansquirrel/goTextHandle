@@ -22,61 +22,9 @@ import (
 )
 
 func Start() {
-	go startWebService()
-	go startAssets()
+	startWebService()
 	//rep := repository.ProxyConfigDB{}
 	//rep.Test()
-}
-
-func startAssets() {
-	startAssetsWebService(
-		global.SysConfig.Assets.Path,
-		global.SysConfig.Assets.Port,
-		global.SysConfig.Assets.LogLevel)
-}
-
-func startAssetsWebService(path string, port int, logLevel string) {
-	log.Debug(fmt.Sprintf("start web service,port: %d,path: %s", port, path))
-	defer log.Debug(fmt.Sprintf("start web service,port: %d,path: %s Complete", port, path))
-	app := iris.New()
-	app.Use(recover.New())
-	app.Use(logger.New())
-	app.Logger().SetLevel(logLevel)
-	app.StaticWeb("/", path)
-
-	go func() {
-		_ = app.Run(
-			iris.Addr(":"+strconv.Itoa(port)),
-			iris.WithoutInterruptHandler,
-			iris.WithoutServerError(iris.ErrServerClosed),
-			iris.WithOptimizations,
-		)
-	}()
-	go func() {
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch,
-			os.Interrupt,
-			syscall.SIGINT,
-			os.Kill,
-			syscall.SIGKILL,
-			syscall.SIGTERM,
-		)
-		select {
-		case <-ch:
-			stopAssetsWebService(app, port, path)
-		case <-global.Ctx.Done():
-			stopAssetsWebService(app, port, path)
-		}
-	}()
-}
-
-func stopAssetsWebService(app *iris.Application, port int, path string) {
-	log.Debug(fmt.Sprintf("stop web service,port: %d,path: %s", port, path))
-	defer log.Debug(fmt.Sprintf("stop web service,port: %d,path: %s Complete", port, path))
-	timeout := 3 * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	_ = app.Shutdown(ctx)
 }
 
 func startWebService() {

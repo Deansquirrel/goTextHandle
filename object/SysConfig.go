@@ -17,7 +17,6 @@ type SystemConfig struct {
 	Service    systemConfigService    `toml:"service"`
 	Server     systemConfigServer     `toml:"server"`
 	UpdateInfo systemConfigUpdateInfo `toml:"updateInfo"`
-	Assets     systemConfigAssets     `toml:"assets"`
 }
 
 func (sc *SystemConfig) FormatConfig() {
@@ -27,7 +26,6 @@ func (sc *SystemConfig) FormatConfig() {
 	sc.Service.FormatConfig()
 	sc.Server.FormatConfig()
 	sc.UpdateInfo.FormatConfig()
-	sc.Assets.FormatConfig()
 }
 
 func (sc *SystemConfig) ToString() string {
@@ -161,36 +159,4 @@ func (sc *systemConfigUpdateInfo) FormatConfig() {
 	sc.CrmDz = strings.Trim(sc.CrmDz, " ")
 	sc.CrmDz = goToolCommon.CheckAndDeleteLastChar(sc.CrmDz, "/")
 	sc.CrmDz = goToolCommon.CheckAndDeleteLastChar(sc.CrmDz, "\\")
-}
-
-type systemConfigAssets struct {
-	Port     int    `toml:"port"`
-	Path     string `toml:"path"`
-	LogLevel string `toml:"logLevel"`
-}
-
-func (sc *systemConfigAssets) FormatConfig() {
-	//设置默认端口 8001
-	if sc.Port == 0 {
-		sc.Port = 8001
-	}
-	//去除首尾空格
-	sc.LogLevel = strings.Trim(sc.LogLevel, " ")
-	//设置Iris默认日志级别
-	if sc.LogLevel == "" {
-		sc.LogLevel = "warn"
-	}
-	//设置字符串转换为小写
-	sc.LogLevel = strings.ToLower(sc.LogLevel)
-	sc.LogLevel = sc.checkLogLevel(sc.LogLevel)
-}
-
-//校验SysConfig中iris日志级别设置（Server|Client）
-func (sc *systemConfigAssets) checkLogLevel(level string) string {
-	switch level {
-	case "debug", "info", "warn", "error":
-		return level
-	default:
-		return "warn"
-	}
 }

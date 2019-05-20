@@ -18,14 +18,6 @@ port=8000
 # iris日志级别 debug、info、warn、error
 logLevel="warn"
 
-[assets]
-# 端口
-port=8001
-# 路径，文件夹须做转换，如“C:\\Users\\yuansong\\build”
-path = "C:\\Users\\yuansong\\React\\react_text_request\\build"
-# iris日志级别 debug、info、warn、error
-logLevel="warn"
-
 [updateInfo]
 # 客户标识
 userKey=""
